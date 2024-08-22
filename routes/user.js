@@ -15,7 +15,7 @@ const theTable = 'users';
 //to get all entity data (table)
 router.get('/', async (req, res) =>{
     try {
-        const result = await conn.query(`SELECT * FROM ${theTable}`,
+        await conn.query(`SELECT * FROM ${theTable}`,
              (err, result, fields) => {
             if (err) throw err;
             res.json(result);
@@ -28,50 +28,54 @@ router.get('/', async (req, res) =>{
 
 
 // POST Create a new data to an entity
-router.post('/', (req, res) => {
-    const { name, email } = req.body;
-    if (!name || !email) {
-        return res.status(400).json({ message: 'Name and email are required' });
-    }
-
-    const newUser = {
-        id: data.length ? data[data.length - 1].id + 1 : 1,
-        name : name,
-        email: email
-    };
-    data.push(newUser);
-    res.status(201).json(newUser);
+router.post('/', async (req, res) => {
+    var sql = `INSERT INTO ${theTable} (name, address) VALUES ('Company Inc', 'Highway 37')`;
+  await conn.query(sql, function (err, result) {
+    if (err) throw err;
+    console.log("1 record inserted at "+ result.insertId);
+  });
 });
 
 
 // GET a single user by ID
-router.get('/:id', (req, res) => {
-    const userId = parseInt(req.params.id);
-    const user = data.find(u => u.id === userId);
-    
-    if (user) {
-        res.json(user);
-    } else {
-        res.status(404).json({ message: 'User not found' });
-    }
+router.get('/:id', async (req, res) => {
+    const id = parseInt(req.params.id);
+    var sql = `SELECT * FROM ${theTable} WHERE id = ?`
+    await conn.query(sql,[id], (err, result) => {
+        if (err) throw err;
+        if (result.length === 0) {
+            res.status(404).send('User not found');
+          } else {
+            res.json(result);
+          }
+      });
 });
 
 
 // PUT Update an existing user
-router.put('/:id', (req, res) => {
-    const userId = parseInt(req.params.id, 10);
-    const { name, email } = req.body;
+router.put('/:id', async (req, res) => {
+    const id = parseInt(req.params.id);
+    const { name } = req.body;
 
-    const userIndex = users.findIndex(u => u.id === userId);
-    if (userIndex === -1) {
-        return res.status(404).json({ message: 'User not found' });
-    }
-
-    if (!name || !email) {
-        return res.status(400).json({ message: 'Name and email are required' });
-    }
-
-    users[userIndex] = { id: userId, name, email };
-    res.json(users[userIndex]);
+    var sql = `UPDATE ${theTable} SET name = ? WHERE id = ?`;
+    await conn.query(sql, [name, id], (err, result) => {
+    if (err) throw err;
+    console.log(result.affectedRows + " record(s) updated");
+  });
 });
+
+// DELETE an existing user
+router.delete('/:id', async (req, res) => {
+    const id = parseInt(req.params.id);
+    var sql = `DELETE FROM ${theTable} WHERE id = ? RETURNING *`
+    await conn.query(sql, [id], (err, result) => {
+        if (err) throw err;
+        if (result.length === 0) {
+            res.status(404).send('User not found');
+          } else {
+            res.status(201).json(result);
+          }
+      });
+  });
+
 module.exports = router;
