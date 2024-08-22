@@ -3,24 +3,19 @@ const router = express.Router();
 
 //connect database
 const conn = require('../class/db')
+const User = require('../models/user')
 
-// using a list just for example
-let data = [
-    { id: 1, name: 'John Doe', email: 'john.doe@example.com' },
-    { id: 2, name: 'Jane Doe', email: 'jane.doe@example.com' }
-];
+//initialize User
+const theUser = new User('users');
+
 
 const theTable = 'users';
 
 //to get all entity data (table)
 router.get('/', async (req, res) =>{
     try {
-        await conn.query(`SELECT * FROM ${theTable}`,
-             (err, result, fields) => {
-            if (err) throw err;
-            res.json(result);
-          });
-        
+         var result = await theUser.getAll();         
+          res.json(result)
       } catch (error) {
         res.status(500).send(error.message);
       }
@@ -29,26 +24,27 @@ router.get('/', async (req, res) =>{
 
 // POST Create a new data to an entity
 router.post('/', async (req, res) => {
-    var sql = `INSERT INTO ${theTable} (name, address) VALUES ('Company Inc', 'Highway 37')`;
-  await conn.query(sql, function (err, result) {
-    if (err) throw err;
-    console.log("1 record inserted at "+ result.insertId);
-  });
+    try {
+        const { name } = req.body;
+        var result = await theUser.createEntity(name);         
+         res.json(result)
+     } catch (error) {
+       res.status(500).send(error.message);
+     }
 });
 
 
 // GET a single user by ID
 router.get('/:id', async (req, res) => {
     const id = parseInt(req.params.id);
-    var sql = `SELECT * FROM ${theTable} WHERE id = ?`
-    await conn.query(sql,[id], (err, result) => {
-        if (err) throw err;
-        if (result.length === 0) {
-            res.status(404).send('User not found');
-          } else {
-            res.json(result);
-          }
-      });
+    try {
+        var result = await theUser.getById(id); 
+        if (result == '404')
+            res.status(404).send('User not found');         
+         res.json(result)
+     } catch (error) {
+       res.status(500).send(error.message);
+     }
 });
 
 
@@ -56,26 +52,28 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', async (req, res) => {
     const id = parseInt(req.params.id);
     const { name } = req.body;
-
-    var sql = `UPDATE ${theTable} SET name = ? WHERE id = ?`;
-    await conn.query(sql, [name, id], (err, result) => {
-    if (err) throw err;
-    console.log(result.affectedRows + " record(s) updated");
-  });
+    try {
+        var result = await theUser.updateEntity(id, name); 
+        if (result == '404')
+            res.status(404).send('User not found');        
+         res.json(result)
+     } catch (error) {
+       res.status(500).send(error.message);
+     }
+    
 });
 
 // DELETE an existing user
 router.delete('/:id', async (req, res) => {
     const id = parseInt(req.params.id);
-    var sql = `DELETE FROM ${theTable} WHERE id = ? RETURNING *`
-    await conn.query(sql, [id], (err, result) => {
-        if (err) throw err;
-        if (result.length === 0) {
-            res.status(404).send('User not found');
-          } else {
-            res.status(201).json(result);
-          }
-      });
+    try {
+        var result = await theUser.deleteEntity(id); 
+        if (result == '404')
+            res.status(404).send('User not found');        
+         res.json(result)
+     } catch (error) {
+       res.status(500).send(error.message);
+     }
   });
 
 module.exports = router;
