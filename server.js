@@ -11,6 +11,8 @@ const bodyParser = require('body-parser')
 
 const indexRouter = require('./routes/index')
 const userRouter = require('./routes/user')
+const AAuth = require('./middleware/authController');
+const theAuth = new AAuth();
 
 //engine template to use
 app.set('view engine', 'ejs');
@@ -27,6 +29,7 @@ app.use(bodyParser.urlencoded({limit: '10mb', extended: true}))
 
 
 app.use('/', indexRouter)
+app.use(theAuth.authenticateToken)
 app.use('/user', userRouter)
 
 app.listen(process.env.PORT || 3000)

@@ -1,15 +1,13 @@
 const express = require('express')
 const router = express.Router();
 
-//connect database
-const conn = require('../class/db')
 const User = require('../models/user')
 
+
 //initialize User
-const theUser = new User('users');
+const theUser = new User('Users');
 
 
-const theTable = 'users';
 
 //to get all entity data (table)
 router.get('/', async (req, res) =>{

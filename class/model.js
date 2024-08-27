@@ -7,9 +7,6 @@ class ModelQuery {
       this.name = name;
     }
   
-    speak() {
-      console.log(`${this.name} makes a sound.`);
-    }
 
   // Helper method to wrap query in a promise
   queryAsync(sql, params = []) {
